@@ -98,6 +98,8 @@ session_start();
     }
 </script>
 <?php
+$message = "";
+$count = 0;
 $submit = $_POST['submit'];
 if ($submit == "Update") {
     $H0 = $_POST['H0'];
@@ -114,6 +116,8 @@ if ($submit == "Update") {
     $_SESSION['oM'] = $oM;
     $_SESSION['oL'] = $oL;
     $_SESSION['z']  = $z;
+    $message = "Updated";
+    $count++;
 }
 if ($submit == "Clear Form") {
     $_SESSION['H0'] = '';
@@ -123,6 +127,8 @@ if ($submit == "Clear Form") {
     $_SESSION['oM'] = '';
     $_SESSION['oL'] = '';
     $_SESSION['z']  = '';
+    $message = "Cleared";
+    $count++;
 }
 $H0 = $_SESSION['H0'];
 $w  = $_SESSION['w'];
@@ -131,7 +137,7 @@ $oR = $_SESSION['oR'];
 $oM = $_SESSION['oM'];
 $oL = $_SESSION['oL'];
 $z = $_SESSION['z'];
-
+//echo "$message has been called $count times. <br /><br />";
 
 if ($submit == "Submit") {
     $H0 = $_POST['H0'];
@@ -166,6 +172,8 @@ if ($submit == "Submit") {
         $oR = (string)0;
         $oM = (string)0.3;
         $oL = (string)0.7;
+        $message = "concordance";
+        $count++;
     } else if (isset($_POST['wmap7'])) {
         $H0 = (string)70.2;
         $w = (string)-1;
@@ -173,6 +181,8 @@ if ($submit == "Submit") {
         $oR = (string)0;
         $oM = (string)0.272;
         $oL = (string)0.728;
+        $message = 'wmap7';
+        $count++;
     } else if (isset($_POST['planck'])) {
         $H0 = (string)67.3;
         $w = (string)-1;
@@ -180,6 +190,8 @@ if ($submit == "Submit") {
         $oR = (string)0;
         $oM = (string)0.315;
         $oL = (string)0.685;
+        $message = 'planck';
+        $count++;
     } else if (isset($_POST['flatempty'])) {
         $H0 = (string)70.0;
         $w = (string)-1;
@@ -187,6 +199,8 @@ if ($submit == "Submit") {
         $oR = (string)0;
         $oM = (string)0.0;
         $oL = (string)1.0;
+        $message = 'flatempty';
+        $count++;
     } else if (isset($_POST['einsteindesitter'])) {
         $H0 = (string)70.0;
         $w = (string)-1;
@@ -194,6 +208,8 @@ if ($submit == "Submit") {
         $oR = (string)0;
         $oM = (string)1.0;
         $oL = (string)0.0;
+        $message = 'edisitter';
+        $count++;
     } else {
         $H0 = $_SESSION['H0'];
         $w  = $_SESSION['w'];
@@ -290,6 +306,7 @@ if ($submit == "Submit") {
   Made by: <b>Robert L. Barone-Nugent</b>, <b>Catherine O. de Burgh-Day</b> and <b>Jaehong Park</b>, 2014.<br>
 STR;
     echo $printthing;
+    echo "$message has been called $count times. <br /><br />";
 }
 $_SESSION['H0'] = $H0;
 $_SESSION['w']  = $w;
@@ -298,6 +315,8 @@ $_SESSION['oR'] = $oR;
 $_SESSION['oM'] = $oM;
 $_SESSION['oL'] = $oL;
 $_SESSION['z']  = $z;
+
+
 ?>
 
 </html>
