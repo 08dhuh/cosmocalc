@@ -1,5 +1,46 @@
 <!--tasks 
+Use more descriptive function and variable names: 
+Function and variable names should be descriptive and self-explanatory, such as combineResult instead of combine_result and cosmologyModel instead of cosmology_model.
+
+Remove unnecessary functions: 
+Some functions, such as validate_numeric_array, are not being used and can be removed.
+
+Use type hints: 
+Type hints can be added to functions to make their expected inputs and outputs more explicit, such as function combineResult(array $labels, string $outputString): array.
+
+Use exceptions for error handling: 
+    Instead of using a simple return value to indicate the success or failure of a function, exceptions can be used to handle errors and make the code more readable, for example by throwing an exception in the case of invalid inputs to the combineResult function.
+
+Refactor repetitive code: 
+Repetitive code, such as the code in update_params_from_session and update_params_from_post, can be refactored into a single function with an additional parameter indicating the source of the parameters.
+
+Store configuration values in a separate file: 
+Configuration values, such as the $calc_labels and $result_labels arrays, should be stored in a separate file, such as a config.php file, to make it easier to maintain and reuse the code.
+
+Use a database for storing session data: 
+    Storing session data in a database can improve the reliability and scalability of the application, and make it easier to manage session data.
+
+Replace the hardcoded arrays with a database query: 
+The $cosmology_model array can be replaced with a database query to retrieve the information, making it easier to update and maintain the data.
+
 store variables
+
+To display a temporary file on a PHP website and then automatically delete it so that you don't overload the server storage, 
+you can use the following steps:
+
+Generate the file: In your Python script, generate the file that you want to display on the PHP website. 
+For example, you could generate a plot as a PNG image file.
+
+Save the file: Save the file to a temporary directory on the server. 
+You can use the tempfile module in Python to generate a unique temporary file name.
+
+Display the file on the PHP website: On the PHP side, use the <img> tag to display the file. 
+You'll need to specify the URL of the file on the server.
+
+Delete the file: After a certain amount of time or after the file has been displayed a certain number of times, 
+you can use the unlink() function in PHP to delete the file from the server.
+
+Cron Job:
 -->
 
 <?php
@@ -7,6 +48,9 @@ store variables
 use JetBrains\PhpStorm\NoReturn;
 
 session_start();
+//store the session ID
+$session_id = session_id();
+
 $cosmology_model = array(
     "concordance" => array("H0" => 70.0, "w" => -1, "wa" => 0, "oR" => 0, "oM" => 0.3, "oL" => 0.7),
     "wmap7" => array("H0" => 70.2, "w" => -1, "wa" => 0, "oR" => 0, "oM" => 0.272, "oL" => 0.728),
@@ -16,7 +60,7 @@ $cosmology_model = array(
 );
 
 $calc_labels = ['H0', 'oM', 'oL', 'oR', 'w', 'wa', 'z'];
-$result_labels = ["Age at z=0", "Comoving distance", "Luminosity distance", "Angular Diameter distance", "Comoving volume", "Distance modulus", "Age at z", "Lookback time", "Comoving volume element"];
+$result_labels = ["Comoving distance", "Luminosity distance", "Angular Diameter distance", "Comoving volume", "Distance modulus", "Age at z", "Lookback time", "Comoving volume element", "Age at z=0"];
 
 $calc_param_container = clear_form($calc_labels);
 $result_param_container = clear_form($result_labels);
@@ -278,9 +322,6 @@ if (isset($_POST['submit']) && $_POST['submit'] == 'Submit') {
     $calc_param_container = update_params_from_post($calc_param_container);
     sync_session_with_params($calc_param_container);
     #relay data to calc.py
-    //$_SESSION['z'] = 1;
-    //$params = array($H0, $omegaM, $omegaL, $omegaR, $w, $wa, $z);
-    //$escaped_params = array_map('escapeshellarg', $params);
     $escaped_params = array_map('escapeshellarg', $calc_param_container);
     $command = "python3 testcalc.py " . implode(" ", $escaped_params) . " 2>&1";
     exec($command, $outputs, $return_var);
@@ -296,11 +337,21 @@ if (isset($_POST['submit']) && $_POST['submit'] == 'Submit') {
             echo "[$key] : $line \n<br />";
         } else {
             #successful calculation
-            if ($key % 3 !== 0) { #1 for UoM calculation, #2 for Ned Wright calculation, #3
+            if ($key % 3 == 1) { #1 for UoM calculation, #2 for Ned Wright calculation, #3
                 $result = combine_result($result_labels, $line);
                 print_r($result);
             } else {
-                echo "[$key] : $line \n<br />"; #redshift
+                echo '<img src="assets/plot.png" alt="Image">';
+                // $image_data = base64_decode($line, true);
+                // #check if decoding was successful
+                // if ($image_data !== false) {
+                //     #save the image to a file or display it
+                //     file_put_contents('image.png', $image_data);
+                //     echo '<img src="data:image/png;base64,' . base64_encode($image_data) . '"/>';
+                //     echo '<img src="image.png" alt="Image">';
+                // } else {
+                //     echo 'Error: Failed to decode image data.';
+                //}
             }
         }
     }

@@ -1,3 +1,6 @@
+astro-prod01.its.unimelb.edu.au
+cd /var/www/html/
+
 To periodically clean up the temporary directory and prevent the server from running out of storage space, you can use a combination of cron jobs and shell scripts.
 
 Create a shell script: Create a shell script that will delete old files from the temporary directory. You can use the find command in Linux to find files that are older than a certain number of days and the rm command to delete them. Here's an example shell script that deletes files older than 7 days:
