@@ -42,7 +42,13 @@ you can use the unlink() function in PHP to delete the file from the server.
 
 Cron Job:
 -->
+<!-- /
+Calculates the results based on the given input parameters and cosmology model.
 
+@param array 
+@param string $cosmology_model The name of the cosmology model to use.
+@return array An associative array with the result labels as keys and their calculated values as values.
+ / -->
 <?php
 
 use JetBrains\PhpStorm\NoReturn;
@@ -60,10 +66,13 @@ $cosmology_model = array(
 );
 
 $calc_labels = ['H0', 'oM', 'oL', 'oR', 'w', 'wa', 'z'];
-$result_labels = ["Comoving distance", "Luminosity distance", "Angular Diameter distance", "Comoving volume", "Distance modulus", "Age at z", "Lookback time", "Comoving volume element", "Age at z=0"];
+$result_labels = ["Age at z=0", "Comoving distance", "Luminosity distance", "Angular Diameter distance", "Comoving volume", "Distance modulus", "Age at z", "Lookback time", "Comoving volume element"];
 
+#$calc_params is an associative array with the input parameters as keys and their values as values.
 $calc_param_container = clear_form($calc_labels);
+#result_param is an associative array with the result labels as keys and their calculated values as values.
 $result_param_container = clear_form($result_labels);
+
 //print_r($calc_param_container);
 
 function validate_numeric_array(array $inputs): bool //finish later
@@ -98,7 +107,7 @@ function combine_result(array $labels, string $output_string): array
     return array_combine($labels, $array);
 }
 
-function clear_form(array $labels): array
+function clear_form(array $labels): array #initializes the array
 {
     return array_fill_keys($labels, 0);
 }
@@ -110,25 +119,17 @@ function sync_session_with_params(array $params): void
     }
 }
 
-function update_params_from_session(array $params): array
+function update_params(array $params, bool $isSessionRequest): array
 {
     foreach ($params as $key => $value) {
         if (isset($_SESSION[$key])) {
-            $params[$key] = $_SESSION[$key];
+            $params[$key] = $isSessionRequest ? $_SESSION[$key] : $_POST[$key];
         }
     }
     return $params;
 }
 
-function update_params_from_post(array $params): array
-{
-    foreach ($params as $key => $value) {
-        if (isset($_POST[$key])) {
-            $params[$key] = $_POST[$key];
-        }
-    }
-    return $params;
-}
+
 
 ?>
 
@@ -319,7 +320,8 @@ function update_params_from_post(array $params): array
 
 <?php
 if (isset($_POST['submit']) && $_POST['submit'] == 'Submit') {
-    $calc_param_container = update_params_from_post($calc_param_container);
+    $calc_param_container = update_params($calc_param_container, $isSessionRequest=false);
+    #$calc_param_container = update_params_from_post($calc_param_container);
     sync_session_with_params($calc_param_container);
     #relay data to calc.py
     $escaped_params = array_map('escapeshellarg', $calc_param_container);
@@ -337,28 +339,18 @@ if (isset($_POST['submit']) && $_POST['submit'] == 'Submit') {
             echo "[$key] : $line \n<br />";
         } else {
             #successful calculation
-            if ($key % 3 == 1) { #1 for UoM calculation, #2 for Ned Wright calculation, #3
+            if ($key % 3 !== 0) { #1 for UoM calculation, #2 for Ned Wright calculation, #3
                 $result = combine_result($result_labels, $line);
                 print_r($result);
             } else {
-                echo '<img src="assets/plot.png" alt="Image">';
-                // $image_data = base64_decode($line, true);
-                // #check if decoding was successful
-                // if ($image_data !== false) {
-                //     #save the image to a file or display it
-                //     file_put_contents('image.png', $image_data);
-                //     echo '<img src="data:image/png;base64,' . base64_encode($image_data) . '"/>';
-                //     echo '<img src="image.png" alt="Image">';
-                // } else {
-                //     echo 'Error: Failed to decode image data.';
-                //}
+                echo "[$key] : $line \n<br />"; #redshift
             }
         }
     }
 }
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     set_cosmology($cosmology_model);
-    $calc_param_container = update_params_from_session($calc_param_container);
+    $calc_param_container = update_params($calc_param_containe, $isSessionRequest=false);
 }
 
 
