@@ -2,14 +2,27 @@ import numpy as np
 import math
 from scipy.integrate import quad
 from astropy import constants as const
-from functools import cached_property
 
 # -------------------------------constants
 c = const.c.to('km/s').value
-mpc = const.kpc.value
+mpc = 3.08567758147e+19
+# const.kpc.value
 seconds_in_a_year = 31557600  # julian
 # c = 2.99792458e5   # in units of km
 # Mpc2km = 3.08567758147e+19     # converts Mpc to km
+
+cosmology_model = {
+    "concordance": {"H0": 70.0, "w": -1, "wa": 0, "omega_rad": 0, "omega_M": 0.3, "omega_Lambda": 0.7},
+    "wmap7": {"H0": 70.2, "w": -1, "wa": 0, "omega_rad": 0, "omega_M": 0.272, "omega_Lambda": 0.728},
+    "planck": {"H0": 67.3, "w": -1, "wa": 0, "omega_rad": 0, "omega_M": 0.315, "omega_Lambda": 0.685},
+    "flatempty": {"H0": 70.0, "w": -1, "wa": 0, "omega_rad": 0, "omega_M": 0.0, "omega_Lambda": 1.0},
+    "einsteindesitter": {"H0": 70.0, "w": -1, "wa": 0, "omega_rad": 0, "omega_M": 1.0, "omega_Lambda": 0.0}
+}
+
+
+def arg_parser(arg: list, dict: dict):
+    lst = [dict[i] for i in arg if i in dict]
+    return lst if len(lst) == len(arg) else ValueError
 
 
 class Cosmocalc:
@@ -27,13 +40,13 @@ class Cosmocalc:
         DH: the comoving distance to the horizon at the present epoch
 
     Methods:
-        E(z):
-            Calculates the value of the E(z) function at the given redshift z.
+        _E(z):
+            Calculates the value of the _E(z) function at the given redshift z.
             Parameters:
                 z : float
                     Redshift.
             Returns:
-                float : The value of E(z). 
+                float : The value of _E(z). 
 
         comoving_distance(z):
             Calculates the comoving distance to a redshift z.
@@ -83,7 +96,7 @@ class Cosmocalc:
             Returns:
                 float : The distance modulus.
 
-        calculate_age_universe(t_i, t_f):
+        _calculate_age_universe(t_i, t_f):
             Calculates the age of the universe between t_i and t_f.
             Parameters:
                 t_i : float
@@ -115,7 +128,7 @@ class Cosmocalc:
                 float : The age of the universe in Gyr.
     """
 
-    def __init__(self, H0, w, wa, omega_rad, omega_M, omega_Lambda):
+    def __init__(self, H0: float, w: float, wa: float, omega_rad: float, omega_M: float, omega_Lambda: float):
         # if z < 0:
         #     raise ValueError
         # add error handling method
@@ -134,7 +147,7 @@ class Cosmocalc:
         self._omega_k = 1 - self.omega_M - self.omega_Lambda - self.omega_rad  # curvature
         self._cosmo_params = {
             'H0': self.H0,
-            'DH': self._DH,
+            'DH': self.DH,
             'w': self.w,
             'wa': self.wa,
             'omega_rad': self.omega_rad,
@@ -143,6 +156,8 @@ class Cosmocalc:
             'omega_k': self.omega_k,
             # 'z': self.z
         }
+        
+    
 
     @property
     def cosmo_params(self):
@@ -207,6 +222,10 @@ class Cosmocalc:
     def omega_k(self):
         return self._omega_k
 
+    @property
+    def DH(self):
+        return self._DH
+
     # @property
     # def z(self):
     #     return self._z
@@ -216,27 +235,18 @@ class Cosmocalc:
     #     self._z = value if value >= 0 else self._z
     #     self._update_cosmo_params()
 
-    @cached_property
-    def E(self, z):
+    def _E(self, z):
         return np.sqrt(self.omega_M*(1+z)**3 + self.omega_k*(1+z)**2 + self.omega_rad*(1+z)**4
                        + self.omega_Lambda*(1+z)**(3*(1+self.w+self.wa))*math.exp(-3*self.wa*(1-1/(1+z))))
 
-    @cached_property
-    def freidman(self, z):
-        return 1/self.E(z)
+    def _freidman(self, z):
+        return 1/self._E(z)
 
-    @cached_property
-    def tage_int(self, z):
-        return 1/((1+z)*self.E(z))
+    def _tage_int(self, z):
+        return 1/((1+z)*self._E(z))
 
-    @cached_property
-    def tage_int(self, z):
-        return 1/((1+z)*self.E(z))
-
-    @cached_property
     def comoving_distance(self, z):
-        freidman_integral = float(quad(self.freidman, 0, z, args=(
-            self.omega_M, self.omega_k, self.omega_rad, self.omega_Lambda, self.w, self.wa)))
+        freidman_integral = float(quad(self._freidman, 0, z)[0])
         if self.omega_k < -1.e-15:  # closed universe
             r = self.DH / np.sqrt(abs(self.omega_k)) * \
                 np.sin(np.sqrt(abs(self.omega_k))*freidman_integral)
@@ -247,21 +257,17 @@ class Cosmocalc:
                 np.sinh(np.sqrt(self.omega_k)*freidman_integral)
         return r
 
-    @cached_property
     def luminosity_distance(self, z):
         return self.comoving_distance(z) * (1+z)
 
-    @cached_property
     def angular_diameter_distance(self, z):
         return self.comoving_distance(z) / (1+z)
 
-    @cached_property
     def comoving_volume_element(self, z):
         Vc_elt = self.DH * \
-            (self.angular_diameter_distance(z)**2 * (1+z)**2 / self.E(z))
+            (self.angular_diameter_distance(z)**2 * (1+z)**2 / self._E(z))
         return Vc_elt
 
-    @cached_property
     def comoving_volume(self, z):
         r = self.comoving_distance(z)
         if self.omega_k < -1.e-15:  # closed universe
@@ -274,46 +280,38 @@ class Cosmocalc:
                                                           - 1/np.sqrt(abs(self.omega_k))*np.arcsinh(np.sqrt(abs(self.omega_k))*r/self.DH))/(1e9)
         return Vc
 
-    @cached_property
     def distance_modulus(self, z):
         return 5 * np.log10(self.luminosity_distance(z) * 10**5)
 
-    @cached_property
-    def calculate_age_universe(self, t_i, t_f):
-        return 1/self.H0*quad(tage_int, [t_i, t_f], args=(self.omega_M, self.omega_k, self.omega_rad, self.omega_Lambda, self.w, self.wa))*(mpc)/(seconds_in_a_year)/(1e9)
+    def _calculate_age_universe(self, t_i, t_f):
+        return 1/self.H0*quad(_tage_int, t_i, t_f, args=(self.omega_M, self.omega_k, self.omega_rad, self.omega_Lambda, self.w, self.wa))[0]\
+            * float(mpc)/float(seconds_in_a_year)/(1e9)
 
-    @cached_property
     def light_travel_time(self, z):
-        return self.calculate_age_universe(0, z)
+        return self._calculate_age_universe(0, z)
 
-    @cached_property
     def age_at_z(self, z):
-        return self.calculate_age_universe(z, np.inf)
+        return self._calculate_age_universe(z, np.inf)
 
-    @cached_property
-    def age_today(self):
-        return self.calculate_age_universe(0, np.inf)
+    def age_today(self, z=None):
+        return self._calculate_age_universe(0, np.inf)
 
 
-@cached_property
-def E(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa):
+def _E(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa):
     return np.sqrt(omega_M*(1+z)**3 + omega_k*(1+z)**2 + omega_rad*(1+z)**4
                    + omega_Lambda*(1+z)**(3*(1+w+wa))*math.exp(-3*wa*(1-1/(1+z))))
 
 
-@cached_property
-def freidman(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa):
-    return 1/E(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa)
+def _freidman(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa):
+    return 1/_E(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa)
 
 
-@cached_property
-def tage_int(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa):
-    return 1/((1+z)*E(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa))
+def _tage_int(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa):
+    return 1/((1+z)*_E(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa))
 
 
-@cached_property
 def comoving_distance(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa, DH):
-    freidman_integral = float(quad(freidman, 0, z, args=(
+    freidman_integral = float(quad(_freidman, 0, z, args=(
         omega_M, omega_k, omega_rad, omega_Lambda, w, wa)))
     if omega_k < -1.e-15:  # closed universe
         r = DH / np.sqrt(abs(omega_k)) * \
@@ -326,25 +324,21 @@ def comoving_distance(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa, DH):
     return r
 
 
-@cached_property
 def luminosity_distance(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa):
     return comoving_distance(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa) * (1+z)
 
 
-@cached_property
 def angular_diameter_distance(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa):
     return comoving_distance(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa) / (1+z)
 
 
-@cached_property
 def comoving_volume_element(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa, DH):
     Vc_elt = DH * \
         (angular_diameter_distance(z, omega_M, omega_k, omega_rad, omega_Lambda, w,
-         wa)**2 * (1+z)**2 / E(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa))
+         wa)**2 * (1+z)**2 / _E(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa))
     return Vc_elt
 
 
-@cached_property
 def comoving_volume(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa, DH):
     r = comoving_distance(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa)
     if omega_k < -1.e-15:  # closed universe
@@ -358,27 +352,22 @@ def comoving_volume(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa, DH):
     return Vc
 
 
-@cached_property
 def distance_modulus(z, H0, omega_M, omega_k, omega_rad, omega_Lambda, w, wa):
     return 5 * np.log10(luminosity_distance(z, H0, omega_M, omega_k, omega_rad, omega_Lambda, w, wa) * 10**5)
 
 
-@cached_property
-def calculate_age_universe(t_i, t_f, H0, omega_M, omega_k, omega_rad, omega_Lambda, w, wa):
-    return 1/H0*quad(tage_int, [t_i, t_f], args=(omega_M, omega_k, omega_rad, omega_Lambda, w, wa))*(mpc)/(seconds_in_a_year)/(1e9)
+def _calculate_age_universe(t_i, t_f, H0, omega_M, omega_k, omega_rad, omega_Lambda, w, wa):
+    return 1/H0*quad(_tage_int, a=t_i, b=t_f, args=(omega_M, omega_k, omega_rad, omega_Lambda, w, wa))*(mpc)/(seconds_in_a_year)/(1e9)
 
 
-@cached_property
 # lookback time, Gyr
 def light_travel_time(z, H0, omega_M, omega_k, omega_rad, omega_Lambda, w, wa):
-    return calculate_age_universe(0, z, H0, omega_M, omega_k, omega_rad, omega_Lambda, w, wa)
+    return _calculate_age_universe(0, z, H0, omega_M, omega_k, omega_rad, omega_Lambda, w, wa)
 
 
-@cached_property
 def age_at_z(z, H0, omega_M, omega_k, omega_rad, omega_Lambda, w, wa):  # age at z, Gyr
-    return calculate_age_universe(z, np.inf, H0, omega_M, omega_k, omega_rad, omega_Lambda, w, wa)
+    return _calculate_age_universe(z, np.inf, H0, omega_M, omega_k, omega_rad, omega_Lambda, w, wa)
 
 
-@cached_property
 def age_today(H0, omega_M, omega_k, omega_rad, omega_Lambda, w, wa):  # age today, Gyr
-    return calculate_age_universe(0, np.inf, H0, omega_M, omega_k, omega_rad, omega_Lambda, w, wa)
+    return _calculate_age_universe(0, np.inf, H0, omega_M, omega_k, omega_rad, omega_Lambda, w, wa)
