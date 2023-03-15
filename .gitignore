@@ -1,3 +1,4 @@
 .streamlit/
+.vscode/
 legacy/
 venv/
