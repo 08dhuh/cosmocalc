@@ -1,7 +1,8 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
-import seaborn as sns
+import plotly.express as px
+
 from cosmocalc import *
 
 st.set_page_config(layout='wide')
@@ -35,21 +36,27 @@ if 'cosmo_param_holder' not in st.session_state:
 
 
 # st.write(st.session_state)
+def change_cosmo(option):
+    for param in cosmology_model[option]:
+        st.session_state[param] = cosmology_model[option][param]
 
 col1, _, col2 = st.columns([2, 1, 2])
 with col1:
-    st.subheader('----this section chooses cosmology parameters')
+    st.subheader('Choose a preset cosmology')
     option = st.selectbox(
         'What is your cosmology?',
-        cosmology_model_keys)
+        cosmology_model_keys,
+        on_change=change_cosmo)
     with st.expander('Explanation of each cosmology'):
+        st.write('You can also access an exhaustive list of flat and non-flat cosmologies <a href="http://lambda.gsfc.nasa.gov/product/map/dr5/parameters.cfm">here</a>'
+                 , unsafe_allow_html=True)
         option_desc = st.selectbox(
             'cosmology type',
             cosmology_model_keys
         )
         st.markdown(cosmo_description[option_desc])
     # Input widgets
-
+    st.subheader('Or enter your own cosmology')
     for param in cosmo_params:
         st.session_state[param] = st.number_input(f'{param}',
                                                   value=float(
@@ -62,14 +69,14 @@ with col1:
         update_param(st.session_state['cosmo'], param, st.session_state[param])
         # st.session_state.update({param: item})
     # st.number_input()
-    if st.button('make cosmo'):
-        try:
-            for param in cosmo_params:
-                setattr(st.session_state['cosmo'],
-                        param, st.session_state[param])
-            st.session_state['cosmo']._update_cosmo_params()
-        except Exception as e:
-            st.write(e)
+    # if st.button('make cosmo'):
+    #     try:
+    #         for param in cosmo_params:
+    #             setattr(st.session_state['cosmo'],
+    #                     param, st.session_state[param])
+    #         st.session_state['cosmo']._update_cosmo_params()
+    #     except Exception as e:
+    #         st.write(e)
 
     # Add form validation algorithm
 
@@ -97,6 +104,27 @@ with col2:  # Explanation for the cosmology
         st.session_state['z']) for cm in st.session_state['cosmo_methods']}
 
     st.dataframe(st.session_state['result'])
+    
+    #_-------------------plots--------------------
+    z_range = st.slider('range of redshift', 0, 100, (0, 10))
+    zs = np.linspace(z_range[0], z_range[1],100)[1:]
 
+    titles = [cm for cm in st.session_state['cosmo_methods'] if cm!='age_today']
+    for cm in titles:
+        func = getattr(st.session_state['cosmo'], cm)
+        res = [func(z) for z in zs]    
+        df = pd.DataFrame(np.column_stack((zs,res)), columns=['redshift', cm])
+        fig = px.line(df, x='redshift', y=cm, title=f'{cm} at redshift z')
+        st.plotly_chart(fig, use_container_width=True)
 
-z_range = st.slider('range of redshift', 0, 100, (0, 10))
+#st.write(z_range[0],z_range[1])
+
+# st.write(st.session_state['cosmo_methods'])
+# s1 = getattr(st.session_state['cosmo'],st.session_state['cosmo_methods'][0])
+# ys = [s1(z) for z in zs]
+# #st.line_chart(np.column_stack((zs,ys)))
+# df = pd.DataFrame(np.column_stack((zs,ys)),columns=['redshift','age at z'])
+# fig = px.line(df, x='redshift', y='age at z', title='Age of the Universe at Redshift z')
+# st.plotly_chart(fig,use_container_width=True)
+#data = np.column_stack([zs,s1(zs)])
+#st.line_chart(data)
