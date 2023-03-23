@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import streamlit as st
 from scipy.integrate import quad
 from astropy import constants as const
 
@@ -11,6 +12,8 @@ seconds_in_a_year = 31557600  # julian
 # c = 2.99792458e5   # in units of km
 # Mpc2km = 3.08567758147e+19     # converts Mpc to km
 
+cosmo_input_params = ['H0', 'w', 'wa', 'omega_rad', 'omega_M', 'omega_Lambda']
+
 cosmology_model = {
     "concordance": {"H0": 70.0, "w": -1, "wa": 0, "omega_rad": 0, "omega_M": 0.3, "omega_Lambda": 0.7},
     "wmap7": {"H0": 70.2, "w": -1, "wa": 0, "omega_rad": 0, "omega_M": 0.272, "omega_Lambda": 0.728},
@@ -18,12 +21,6 @@ cosmology_model = {
     "flatempty": {"H0": 70.0, "w": -1, "wa": 0, "omega_rad": 0, "omega_M": 0.0, "omega_Lambda": 1.0},
     "einsteindesitter": {"H0": 70.0, "w": -1, "wa": 0, "omega_rad": 0, "omega_M": 1.0, "omega_Lambda": 0.0}
 }
-
-
-def arg_parser(arg: list, dict: dict):
-    lst = [dict[i] for i in arg if i in dict]
-    return lst if len(lst) == len(arg) else ValueError
-
 
 class Cosmocalc:
     """
@@ -78,7 +75,7 @@ class Cosmocalc:
                 z : float
                     Redshift.
             Returns:
-                float : The comoving volume element in Mpc^3.
+                float : The comoving volume element in Gpc^3.
 
         comoving_volume(z):
             Calculates the comoving volume out to a redshift z.
@@ -129,18 +126,14 @@ class Cosmocalc:
     """
 
     def __init__(self, H0: float, w: float, wa: float, omega_rad: float, omega_M: float, omega_Lambda: float):
-        # if z < 0:
-        #     raise ValueError
-        # add error handling method
         self._H0 = H0
         self._w = w
         self._wa = wa
         self._omega_rad = omega_rad
         self._omega_M = omega_M
         self._omega_Lambda = omega_Lambda
-        # self._z = z
         self._DH = c/H0
-        self._omega_k = 1 - omega_M - omega_Lambda - omega_rad  # curvature
+        #self._omega_k = 1 - omega_M - omega_Lambda - omega_rad  # curvature
         self._update_cosmo_params()
 
     def _update_cosmo_params(self):
@@ -156,12 +149,8 @@ class Cosmocalc:
             'omega_k': self.omega_k,
             # 'z': self.z
         }
-        
     
-
-    @property
-    def cosmo_params(self):
-        return self.__dict__
+                 
 
     @property
     def H0(self):
@@ -226,15 +215,7 @@ class Cosmocalc:
     def DH(self):
         return self._DH
 
-    # @property
-    # def z(self):
-    #     return self._z
-
-    # @z.setter
-    # def z(self, value):
-    #     self._z = value if value >= 0 else self._z
-    #     self._update_cosmo_params()
-
+    
     def _E(self, z):
         return np.sqrt(self.omega_M*(1+z)**3 + self.omega_k*(1+z)**2 + self.omega_rad*(1+z)**4
                        + self.omega_Lambda*(1+z)**(3*(1+self.w+self.wa))*math.exp(-3*self.wa*(1-1/(1+z))))
@@ -266,7 +247,7 @@ class Cosmocalc:
     def comoving_volume_element(self, z):
         Vc_elt = self.DH * \
             (self.angular_diameter_distance(z)**2 * (1+z)**2 / self._E(z))
-        return Vc_elt
+        return Vc_elt *1e-9
 
     def comoving_volume(self, z):
         r = self.comoving_distance(z)
@@ -293,7 +274,7 @@ class Cosmocalc:
     def age_at_z(self, z):
         return self._calculate_age_universe(z, np.inf)
 
-    def age_today(self, z=None):
+    def age_today(self, z):
         return self._calculate_age_universe(0, np.inf)
 
 
@@ -306,8 +287,10 @@ def _freidman(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa):
     return 1/_E(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa)
 
 
+
 def _tage_int(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa):
     return 1/((1+z)*_E(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa))
+
 
 
 def comoving_distance(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa, DH):
@@ -324,12 +307,15 @@ def comoving_distance(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa, DH):
     return r
 
 
+
 def luminosity_distance(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa):
     return comoving_distance(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa) * (1+z)
 
 
+
 def angular_diameter_distance(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa):
     return comoving_distance(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa) / (1+z)
+
 
 
 def comoving_volume_element(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa, DH):
@@ -337,6 +323,7 @@ def comoving_volume_element(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa,
         (angular_diameter_distance(z, omega_M, omega_k, omega_rad, omega_Lambda, w,
          wa)**2 * (1+z)**2 / _E(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa))
     return Vc_elt
+
 
 
 def comoving_volume(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa, DH):
@@ -352,8 +339,10 @@ def comoving_volume(z, omega_M, omega_k, omega_rad, omega_Lambda, w, wa, DH):
     return Vc
 
 
+
 def distance_modulus(z, H0, omega_M, omega_k, omega_rad, omega_Lambda, w, wa):
     return 5 * np.log10(luminosity_distance(z, H0, omega_M, omega_k, omega_rad, omega_Lambda, w, wa) * 10**5)
+
 
 
 def _calculate_age_universe(t_i, t_f, H0, omega_M, omega_k, omega_rad, omega_Lambda, w, wa):
@@ -361,12 +350,15 @@ def _calculate_age_universe(t_i, t_f, H0, omega_M, omega_k, omega_rad, omega_Lam
 
 
 # lookback time, Gyr
+
 def light_travel_time(z, H0, omega_M, omega_k, omega_rad, omega_Lambda, w, wa):
     return _calculate_age_universe(0, z, H0, omega_M, omega_k, omega_rad, omega_Lambda, w, wa)
 
 
+
 def age_at_z(z, H0, omega_M, omega_k, omega_rad, omega_Lambda, w, wa):  # age at z, Gyr
     return _calculate_age_universe(z, np.inf, H0, omega_M, omega_k, omega_rad, omega_Lambda, w, wa)
+
 
 
 def age_today(H0, omega_M, omega_k, omega_rad, omega_Lambda, w, wa):  # age today, Gyr
