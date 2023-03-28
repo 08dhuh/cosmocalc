@@ -1,4 +1,6 @@
-.streamlit/
 .vscode/
+__pycache__/
+assets/
 legacy/
 venv/
+cosmocalc.code-workspace

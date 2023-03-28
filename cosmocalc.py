@@ -14,13 +14,7 @@ seconds_in_a_year = 31557600  # julian
 
 cosmo_input_params = ['H0', 'w', 'wa', 'omega_rad', 'omega_M', 'omega_Lambda']
 
-cosmology_model = {
-    "concordance": {"H0": 70.0, "w": -1, "wa": 0, "omega_rad": 0, "omega_M": 0.3, "omega_Lambda": 0.7},
-    "wmap7": {"H0": 70.2, "w": -1, "wa": 0, "omega_rad": 0, "omega_M": 0.272, "omega_Lambda": 0.728},
-    "planck": {"H0": 67.3, "w": -1, "wa": 0, "omega_rad": 0, "omega_M": 0.315, "omega_Lambda": 0.685},
-    "flatempty": {"H0": 70.0, "w": -1, "wa": 0, "omega_rad": 0, "omega_M": 0.0, "omega_Lambda": 1.0},
-    "einsteindesitter": {"H0": 70.0, "w": -1, "wa": 0, "omega_rad": 0, "omega_M": 1.0, "omega_Lambda": 0.0}
-}
+
 
 class Cosmocalc:
     """
