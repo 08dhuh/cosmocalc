@@ -4,3 +4,4 @@ assets/
 legacy/
 venv/
 cosmocalc.code-workspace
+.cosmo_param.py

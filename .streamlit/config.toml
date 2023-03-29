@@ -1,0 +1,10 @@
+[client]
+caching=true
+
+[theme]
+primaryColor="#094183"
+backgroundColor="#FFFFFF"
+secondaryBackgroundColor="#AED6F1"
+textColor="#000000"
+font="monospace"
+

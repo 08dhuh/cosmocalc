@@ -1,0 +1,139 @@
+input_param_dict:
+  H0:
+    description: Hubble constant in km/s/Mpc
+    mask: "H\u2080"
+    min: 0.0
+    max: 1000.0
+  omega_Lambda:
+    description: This is the dark energy density term.
+    mask: "\u03A9\u209B"
+    min: 0.0
+    max: 2.0
+  omega_M:
+    description: This is the matter density term.
+    mask: "\u03A9\u2098"
+    min: 0.0
+    max: 1.0
+  omega_rad:
+    description:
+      This is the radiation density term. In standard cosmologies, radiation
+      is only dominant at very high redshifts.
+    mask: "\u03A9\u209A"
+    min: 0.0
+    max: 1.0
+  w:
+    description:
+      "This is the expansion term. In standard cosmologies it is equal\
+      \ to \u03A9=\u03A9\u2080=-1"
+    mask: w
+    min: -2.0
+    max: 0.0
+  wa:
+    description:
+      "This term allows you to let the expansion term evolve with redshift\
+      \ as \u03A9_CPL = \u03A9\u2080+\u03A9\u2090(z/1+z). This is the Chevalier-Polarski-Linder\
+      \ (CPL)"
+    mask: "w\u2090"
+    min: -2.0
+    max: 2.0
+  omega_k:
+    description: "This is the curvature density term.\
+      It describes the spatial curvature of the universe, which can be open, flat, or closed."
+    mask: "\u03A9\u2096"
+    min: None
+    max: None
+  z:
+    description: "This is the redshift, which is a measure of how much the universe has expanded\ 
+      since light was emitted from a distant object. It is defined as \u03BB_\u1D63\u1D62\u2092 - 
+      \u03BB_\u1D63\u2091\u2098\u1D62 / u03BB_\u1D63\u2091\u2098\u1D62 / \
+      where lambda_obs is the observed wavelength and lambda_emit is the emitted wavelength.\ 
+      A higher redshift indicates a greater distance and therefore a greater lookback time."
+    mask: "z"
+    min: 0.0
+    max: None
+
+model_dict:
+  concordance:
+    description:
+      contains cosmological parameters from the concordance model, which assumes
+      a flat universe with a constant dark energy density and a matter density dominated
+      by cold dark matter.
+    param:
+      H0: 70.0
+      omega_Lambda: 0.7
+      omega_M: 0.3
+      omega_rad: 0
+      w: -1
+      wa: 0
+  einsteindesitter:
+    description:
+      contains cosmological parameters for the Einstein-de Sitter model, which
+      assumes a universe filled with only matter and no dark energy.
+    param:
+      H0: 70.0
+      omega_Lambda: 0.0
+      omega_M: 1.0
+      omega_rad: 0
+      w: -1
+      wa: 0
+  flatempty:
+    description:
+      contains cosmological parameters for a flat universe with no matter, only
+      a cosmological constant (vacuum energy).
+    param:
+      H0: 70.0
+      omega_Lambda: 1.0
+      omega_M: 0.0
+      omega_rad: 0
+      w: -1
+      wa: 0
+  planck:
+    description:
+      contains cosmological parameters from the Planck mission, which also measured
+      the cosmic microwave background radiation.
+    param:
+      H0: 67.3
+      omega_Lambda: 0.685
+      omega_M: 0.315
+      omega_rad: 0
+      w: -1
+      wa: 0
+  wmap7:
+    description:
+      contains cosmological parameters from the WMAP7 mission, which measured
+      the cosmic microwave background radiation.
+    param:
+      H0: 70.2
+      omega_Lambda: 0.728
+      omega_M: 0.272
+      omega_rad: 0
+      w: -1
+      wa: 0
+result_dict:
+  age_at_z:
+    mask: Age at Z
+    unit: Gyr
+  age_today:
+    mask: Age Today
+    unit: Gyr
+  angular_diameter_distance:
+    mask: Angular Diameter Distance
+    unit: Mpc
+  comoving_distance:
+    mask: Comoving Distance
+    unit: Mpc
+  comoving_volume:
+    mask: Comoving Volume
+    unit: Mpc\u8803
+  comoving_volume_element:
+    mask: Comoving Volume Element
+    unit: Mpc\u8803
+  distance_modulus:
+    mask: Distance Modulus
+    unit: mag
+  light_travel_time:
+    mask: Light Travel Time
+    unit: Gyr
+  luminosity_distance:
+    mask: Luminosity Distance
+    unit: Mpc
