@@ -38,7 +38,7 @@ def arg_parser(arg: list, session_state: dict):
     lst = [session_state[i] for i in arg if i in session_state]
     return lst if len(lst) == len(arg) else ValueError
 
-def num_formatter(num: float, decimal=2): 
+def num_formatter(num: float or np.ndarray, decimal=2): 
     """
     This function formats a given float 'num' to a specific number of decimal places.
 
@@ -49,7 +49,16 @@ def num_formatter(num: float, decimal=2):
     Returns:
     - float: Formatted number with the specified number of decimal places
     """
-    return round(num, decimal)
+    try:
+        if type(num) is float:
+            return round(num, decimal)
+        if type(num) is np.ndarray:
+            return np.around(num, decimal)
+        else:
+            raise TypeError
+    except TypeError as e:
+        return st.error(e)
+    
 
 
 def update_cosmo_param(obj: Cosmocalc, param, value):
@@ -113,9 +122,9 @@ def change_cosmo(option:str):
     for param in cosmology_model_dict[option]['param']:
         st.session_state[param] = cosmology_model_dict[option]['param'][param]
 
+#-----------------------Output --------------------------------
 
-@st.cache_data
-def calculate_cosmo_attribute(_func_name: str, z):
+def calculate_cosmo_attribute(_func_name: str, z, rounding=True):
     """
     Calculates the cosmological attribute specified by `_func_name` for redshift values `z`.
 
@@ -134,12 +143,12 @@ def calculate_cosmo_attribute(_func_name: str, z):
     """
     try:
         cm = np.vectorize(getattr(st.session_state['cosmo'], _func_name))
-        return cm(z)
+        return num_formatter(cm(z))
     except AttributeError as e:
         return st.error(e)
 
 
-@st.cache_data
+#@st.cache_data
 # for the result of the calculation
 def calculate_cosmo_attributes_z(z, df=None):
     """
@@ -154,15 +163,17 @@ def calculate_cosmo_attributes_z(z, df=None):
     Returns:
     pandas.DataFrame: A pandas dataframe.                      
     """
-    attributes = [result_dict[c]['mask'] for c in result_dict]
-    values = [
-        f'{num_formatter(calculate_cosmo_attribute(c,z))} \
-            {result_dict[c]["unit"]}' for c in result_dict]
-    if df is None:
-        df = pd.DataFrame({f'Values at {z}': values}, index=attributes)
-    else:
-        df[f'Values at {z}'] = values
-    return df
+    try:
+        attributes = [result_dict[c]['mask'] for c in result_dict]
+        values = [
+            f'{calculate_cosmo_attribute(c,z)} {result_dict[c]["unit"]}' for c in result_dict]
+        if df is None:
+            df = pd.DataFrame({f'Values at z={z}': values}, index=attributes)
+        else:
+            df[f'Values at {z}'] = values
+        return df
+    except Exception as e:
+        st.error(e)
 
 @st.cache_data(experimental_allow_widgets=True, max_entries=1000)
 def get_zs(max_z: int = 100, num_points: int = 100):
@@ -185,7 +196,7 @@ def get_zs(max_z: int = 100, num_points: int = 100):
         zs = np.append(zs[1:], zs[-1]+np.diff(zs)[0])
     return zs
 
-@st.cache_data
+#@st.cache_data
 def plot_cosmo_attribute(funcname: str, z: np.ndarray):
     """
     Plot the variation of a given cosmological attribute with redshift.
@@ -244,16 +255,17 @@ def display_cosmology_section():
         None
     """
     st.subheader('Choose a preset cosmology')
-    with st.expander('Explanation of each cosmology'):
-        option_desc = st.selectbox(
-            'cosmology type',
-            list(cosmology_model_dict)
-        )
-        st.markdown(cosmology_model_dict[option_desc]['description'])
-        st.write("""You can also access an exhaustive list of flat and non-flat cosmologies
-                    [here](http://lambda.gsfc.nasa.gov/product/map/dr5/parameters.cfm)""")
+    # with st.expander('Explanation of each cosmology'):
+    #     option_desc = st.selectbox(
+    #         'cosmology type',
+    #         list(cosmology_model_dict)
+    #     )
+    #     st.markdown(cosmology_model_dict[option_desc]['description'])
+    #     
 
     #columnbuttons = st.columns([1 for i in range(len(cosmology_model_dict))])
+    st.write("""You can also access an exhaustive list of flat and non-flat cosmologies \
+                    [here](http://lambda.gsfc.nasa.gov/product/map/dr5/parameters.cfm)""")
     columnbuttons = st.columns(len(cosmology_model_dict))
     for i, r in enumerate(cosmology_model_dict):
         with columnbuttons[i]:
@@ -282,17 +294,20 @@ def display_input_control():
     Returns:
         None
     """
-    st.sidebar.header()
+    st.sidebar.header('Adjust the input parameters below')
     for param in input_param_dict:
+        min_val = float(input_param_dict[param]['min'])
+        max_val = float(input_param_dict[param]['max'])
         st.session_state[param] = st.sidebar.number_input(f'{input_param_dict[param]["mask"]}',
                                                           value=float(
-                                                              st.session_state[param]),
+                                                              st.session_state[param]) if param in st.session_state\
+                                                                  else st.session_state['cosmo'].omega_k,
                                                           format='%.4f',
                                                           step=None,
                                                           disabled=(
-                                                              param == 'omega_k'),
-                                                          min=input_param_dict[param]['min'],
-                                                          max=input_param_dict[param]['max'],
+                                                              param == 'omega_k'),                                                          
+                                                          min_value=min_val,
+                                                          max_value=max_val,
                                                           help=input_param_dict[param]['description'],
                                                           )
         if param in cosmo_input_params:
@@ -322,7 +337,7 @@ def display_cosmo_plots():
         if att == 'age_today':
             continue
         fig = plot_cosmo_attribute(att, zs)
-        if 'time' in att:
+        if 'time' in att or 'age' in att:
             with col1:
                 st.plotly_chart(fig, use_container_width=True)
         else:
@@ -345,3 +360,14 @@ def main():
         display_results()
     with tab2:
         display_cosmo_plots()
+        
+    st.markdown('')
+    st.caption('(1) M. Chevallier and D. Polarski, Int. J. Mod. Phys. D 10, 213 (2001),\
+        \n(2) E.V. Linder, Phys. Rev. Lett. 90, 091301 (2003) \
+            \nContributors: Robert L. Barone-Nugent, \
+            Catherine O. de Burgh-Day and Jaehong Park, 2014.\
+                \nDoran Huh, 2023')
+    st.caption('For reporting errors and suggestions, please contact huhd@unimelb.edu.au or r.webster@unimelb.edu.au')
+    
+if __name__ == '__main__':
+    main()

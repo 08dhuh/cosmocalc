@@ -40,8 +40,8 @@ input_param_dict:
     description: "This is the curvature density term.\
       It describes the spatial curvature of the universe, which can be open, flat, or closed."
     mask: "\u03A9\u2096"
-    min: None
-    max: None
+    min: -1.797e+308
+    max: 1.797e+308
   z:
     description: "This is the redshift, which is a measure of how much the universe has expanded\ 
       since light was emitted from a distant object. It is defined as \u03BB_\u1D63\u1D62\u2092 - 
@@ -50,7 +50,7 @@ input_param_dict:
       A higher redshift indicates a greater distance and therefore a greater lookback time."
     mask: "z"
     min: 0.0
-    max: None
+    max: 1.797e+308
 
 model_dict:
   concordance:
@@ -124,10 +124,10 @@ result_dict:
     unit: Mpc
   comoving_volume:
     mask: Comoving Volume
-    unit: Mpc\u8803
+    unit: Mpc³
   comoving_volume_element:
     mask: Comoving Volume Element
-    unit: Mpc\u8803
+    unit: Mpc³
   distance_modulus:
     mask: Distance Modulus
     unit: mag
