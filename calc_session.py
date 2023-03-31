@@ -19,6 +19,7 @@ result_dict = params['result_dict']
 
 # ----------------------utilities------------------------------------
 
+
 def arg_parser(arg: list, session_state: dict):
     """
     This function takes a list of arguments 'arg' and a dictionary 'dict' and returns
@@ -38,7 +39,8 @@ def arg_parser(arg: list, session_state: dict):
     lst = [session_state[i] for i in arg if i in session_state]
     return lst if len(lst) == len(arg) else ValueError
 
-def num_formatter(num: float or np.ndarray, decimal=2): 
+
+def num_formatter(num: float or np.ndarray, decimal=2):
     """
     This function formats a given float 'num' to a specific number of decimal places.
 
@@ -58,7 +60,6 @@ def num_formatter(num: float or np.ndarray, decimal=2):
             raise TypeError
     except TypeError as e:
         return st.error(e)
-    
 
 
 def update_cosmo_param(obj: Cosmocalc, param, value):
@@ -108,7 +109,7 @@ def update_cosmo_params(obj: Cosmocalc, *args, **kwargs):
             'The number of arguments/ keyword arguments are not supported')
 
 
-def change_cosmo(option:str):
+def change_cosmo(option: str):
     """
     This function updates the values of specific parameters in the current session
     state based on the selected 'option' (a string representing a cosmology model).
@@ -122,7 +123,16 @@ def change_cosmo(option:str):
     for param in cosmology_model_dict[option]['param']:
         st.session_state[param] = cosmology_model_dict[option]['param'][param]
 
-#-----------------------Output --------------------------------
+
+def clear_result_chart(cond:bool=True):
+    """
+    initialises the result chart
+    """
+    if 'result' not in st.session_state or cond: 
+        st.session_state['result'] = None
+
+# -----------------------Output --------------------------------
+
 
 def calculate_cosmo_attribute(_func_name: str, z, rounding=True):
     """
@@ -148,7 +158,7 @@ def calculate_cosmo_attribute(_func_name: str, z, rounding=True):
         return st.error(e)
 
 
-#@st.cache_data
+# @st.cache_data
 # for the result of the calculation
 def calculate_cosmo_attributes_z(z, df=None):
     """
@@ -168,12 +178,13 @@ def calculate_cosmo_attributes_z(z, df=None):
         values = [
             f'{calculate_cosmo_attribute(c,z)} {result_dict[c]["unit"]}' for c in result_dict]
         if df is None:
-            df = pd.DataFrame({f'Values at z={z}': values}, index=attributes)
+            df = pd.DataFrame({f'Values at {num_formatter(z)}': values}, index=attributes)
         else:
-            df[f'Values at {z}'] = values
+            df[f'Values at {num_formatter(z)}'] = values
         return df
     except Exception as e:
         st.error(e)
+
 
 @st.cache_data(experimental_allow_widgets=True, max_entries=1000)
 def get_zs(max_z: int = 100, num_points: int = 100):
@@ -187,7 +198,7 @@ def get_zs(max_z: int = 100, num_points: int = 100):
     Returns:
         np.ndarray: An array of redshift values between the given range.
     """
-    z_range = st.slider('range of redshift', 0, max_z, (0,5))
+    z_range = st.slider('range of redshift', 0, max_z, (0, 5))
     if z_range[0] == z_range[1]:
         st.error('min and max values must be different')
         return None
@@ -196,16 +207,18 @@ def get_zs(max_z: int = 100, num_points: int = 100):
         zs = np.append(zs[1:], zs[-1]+np.diff(zs)[0])
     return zs
 
-#@st.cache_data
-def plot_cosmo_attribute(funcname: str, z: np.ndarray, result_dict:dict=result_dict):
+# @st.cache_data
+
+
+def plot_cosmo_attribute(funcname: str, z: np.ndarray, result_dict: dict = result_dict):
     """
     Plot the variation of a given cosmological attribute with redshift.
-    
+
     Args:
     - funcname (str): Name of the cosmological attribute to be plotted.
     - z (numpy.ndarray): Redshift values.
     - **kwargs: Keyword arguments to be passed to the plot.
-    
+
     Returns:
     - fig (plotly.graph_objs._figure.Figure): A plotly figure object.
     """
@@ -216,12 +229,14 @@ def plot_cosmo_attribute(funcname: str, z: np.ndarray, result_dict:dict=result_d
                   x='redshift',
                   y=funcname,
                   title=f'{result_dict[funcname]["mask"]}',
-                  labels={funcname: f'{result_dict[funcname]["mask"]} ({result_dict[funcname]["unit"]})'},
+                  labels={
+                      funcname: f'{result_dict[funcname]["mask"]} ({result_dict[funcname]["unit"]})'},
                   log_x=True
                   )
     return fig
-#---------------------flow---------------------
+# ---------------------flow---------------------
 # ---------------- initialisation--------------------------------
+
 
 def initialize_session_data():
     """
@@ -243,8 +258,10 @@ def initialize_session_data():
         st.session_state['cosmo'] = Cosmocalc(
             *arg_parser(cosmo_input_params, st.session_state))
         st.session_state['z'] = 1.0
+        clear_result_chart(False)
 
 # -------------------preset cosmology--------------------
+
 
 def display_cosmology_section():
     """
@@ -262,9 +279,9 @@ def display_cosmology_section():
     #         list(cosmology_model_dict)
     #     )
     #     st.markdown(cosmology_model_dict[option_desc]['description'])
-    #     
+    #
 
-    #columnbuttons = st.columns([1 for i in range(len(cosmology_model_dict))])
+    # columnbuttons = st.columns([1 for i in range(len(cosmology_model_dict))])
     st.write("""You can also access an exhaustive list of flat and non-flat cosmologies \
                     [here](http://lambda.gsfc.nasa.gov/product/map/dr5/parameters.cfm)""")
     columnbuttons = st.columns(len(cosmology_model_dict))
@@ -281,6 +298,7 @@ def display_cosmology_section():
 
 # ------------------------------------- Input widgets------------------
 # trying sidebar approach
+
 
 def display_input_control():
     """
@@ -301,15 +319,18 @@ def display_input_control():
         max_val = float(input_param_dict[param]['max'])
         st.session_state[param] = st.sidebar.number_input(f'{input_param_dict[param]["mask"]}',
                                                           value=float(
-                                                              st.session_state[param]) if param in st.session_state\
-                                                                  else st.session_state['cosmo'].omega_k,
+                                                              st.session_state[param]) if param in st.session_state
+                                                          else st.session_state['cosmo'].omega_k,
                                                           format='%.4f',
                                                           step=None,
                                                           disabled=(
-                                                              param == 'omega_k'),                                                          
+                                                              param == 'omega_k'),
                                                           min_value=min_val,
                                                           max_value=max_val,
                                                           help=input_param_dict[param]['description'],
+                                                          on_change=(lambda param=param: clear_result_chart() \
+                                                                     if param!='z' else None) ,
+                                                          #args=(param,)
                                                           )
         if param in cosmo_input_params:
             update_cosmo_param(
@@ -320,12 +341,18 @@ def display_results():
     """
     Displays the results of the cosmological calculation as a Pandas dataframe.
     """
-    if 'result' not in st.session_state:
-        st.session_state['result'] = None
+    st.caption("""By default, when a cosmological input parameter other than z changes,\
+                    the result table will be refreshed""")
+        
+    # if 'result' not in st.session_state or st.button('Clear'):
+    #     st.session_state['result'] = None
     st.session_state['result'] = calculate_cosmo_attributes_z(
         st.session_state['z'], st.session_state['result'])
     st.dataframe(st.session_state['result'])
-
+    if st.button('Clear Table'):
+        clear_result_chart()
+        #st.session_state['result'] = None
+        st.experimental_rerun()
 
 
 def display_cosmo_plots():
@@ -333,43 +360,47 @@ def display_cosmo_plots():
     Display cosmology plots for various attributes.
     """
     zs = get_zs()
-    col1,_,col2 = st.columns([2,0.2,2])
+    col1, _, col2 = st.columns([2, 0.2, 2])
     for i, att in enumerate(result_dict):
         if att == 'age_today':
             continue
         fig = plot_cosmo_attribute(att, zs)
-        #if 'time' in att or 'age' in att:
-        if i%2==0:
+        # if 'time' in att or 'age' in att:
+        if i % 2 == 0:
             with col1:
                 st.plotly_chart(fig, use_container_width=True)
         else:
             with col2:
                 st.plotly_chart(fig, use_container_width=True)
-                
+
+
 def main():
     """
     main program for the University of Melbourne Astrophysics Department Cosmology Calculator.
     """
     st.title('University of Melbourne Astrophysics Department Cosmology Calculator')
-    #------------initialisation------------------------
+    # ------------initialisation------------------------
     initialize_session_data()
-    #-------------input------------------------
+    # -------------input------------------------
     display_cosmology_section()
     display_input_control()
-    #------------output------------------------
+    # ------------output------------------------
     tab1, tab2 = st.tabs(['Results', 'Plots'])
     with tab1:
         display_results()
     with tab2:
         display_cosmo_plots()
-        
+
     st.markdown('')
     st.caption('(1) M. Chevallier and D. Polarski, Int. J. Mod. Phys. D 10, 213 (2001),\
         \n(2) E.V. Linder, Phys. Rev. Lett. 90, 091301 (2003) \
-            \nContributors: Robert L. Barone-Nugent, \
-            Catherine O. de Burgh-Day and Jaehong Park, 2014.\
-                \nDoran Huh, 2023')
-    st.caption('For reporting errors and suggestions, please contact huhd@unimelb.edu.au or r.webster@unimelb.edu.au')
-    
+            \nContributors: Doran Huh, 2023 \
+            \nRobert L. Barone-Nugent, \
+            Catherine O. de Burgh-Day and Jaehong Park, 2014\
+                ')
+    st.caption(
+        'For reporting errors and suggestions, please contact huhd@unimelb.edu.au or r.webster@unimelb.edu.au')
+
+
 if __name__ == '__main__':
     main()
