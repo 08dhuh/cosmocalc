@@ -187,18 +187,17 @@ def calculate_cosmo_attributes_z(z, df=None):
 
 
 @st.cache_data(experimental_allow_widgets=True, max_entries=1000)
-def get_zs(max_z: int = 100, num_points: int = 100):
+def get_zs(z_range,num_points: int = 100):
     """
     Returns an array of redshift values between the given range.
 
     Args:
-        max_z (int): The maximum value of the redshift range.
+        z_range(tuple): The redshift range.
         num_points (int): The number of points to generate between the given range.
 
     Returns:
         np.ndarray: An array of redshift values between the given range.
-    """
-    z_range = st.slider('range of redshift', 0, max_z, (0, 5))
+    """    
     if z_range[0] == z_range[1]:
         st.error('min and max values must be different')
         return None
@@ -258,6 +257,7 @@ def initialize_session_data():
         st.session_state['cosmo'] = Cosmocalc(
             *arg_parser(cosmo_input_params, st.session_state))
         st.session_state['z'] = 1.0
+        #st.session_state['max_z']=100        
         clear_result_chart(False)
 
 # -------------------preset cosmology--------------------
@@ -359,7 +359,12 @@ def display_cosmo_plots():
     """
     Display cosmology plots for various attributes.
     """
-    zs = get_zs()
+    c1,c2 = st.columns([1,2])
+    with c2:
+        z_range = st.slider('range of redshift', 0, st.session_state['max_z'], (0, 5), )
+    with c1:        
+        st.number_input('Adjust the maximum range of z (min=5)', value=100, min_value=5, key='max_z')
+    zs = get_zs(z_range)
     col1, _, col2 = st.columns([2, 0.2, 2])
     for i, att in enumerate(result_dict):
         if att == 'age_today':
