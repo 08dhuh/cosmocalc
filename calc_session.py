@@ -187,7 +187,7 @@ def get_zs(max_z: int = 100, num_points: int = 100):
     Returns:
         np.ndarray: An array of redshift values between the given range.
     """
-    z_range = st.slider('range of redshift', 0, max_z, (0, 10))
+    z_range = st.slider('range of redshift', 0, max_z, (0,5))
     if z_range[0] == z_range[1]:
         st.error('min and max values must be different')
         return None
@@ -197,7 +197,7 @@ def get_zs(max_z: int = 100, num_points: int = 100):
     return zs
 
 #@st.cache_data
-def plot_cosmo_attribute(funcname: str, z: np.ndarray):
+def plot_cosmo_attribute(funcname: str, z: np.ndarray, result_dict:dict=result_dict):
     """
     Plot the variation of a given cosmological attribute with redshift.
     
@@ -216,6 +216,7 @@ def plot_cosmo_attribute(funcname: str, z: np.ndarray):
                   x='redshift',
                   y=funcname,
                   title=f'{result_dict[funcname]["mask"]}',
+                  labels={funcname: f'{result_dict[funcname]["mask"]} ({result_dict[funcname]["unit"]})'},
                   log_x=True
                   )
     return fig
@@ -333,11 +334,12 @@ def display_cosmo_plots():
     """
     zs = get_zs()
     col1,_,col2 = st.columns([2,0.2,2])
-    for att in result_dict:
+    for i, att in enumerate(result_dict):
         if att == 'age_today':
             continue
         fig = plot_cosmo_attribute(att, zs)
-        if 'time' in att or 'age' in att:
+        #if 'time' in att or 'age' in att:
+        if i%2==0:
             with col1:
                 st.plotly_chart(fig, use_container_width=True)
         else:

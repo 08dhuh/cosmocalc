@@ -109,18 +109,15 @@ model_dict:
       omega_rad: 0
       w: -1
       wa: 0
-result_dict:
-  age_at_z:
-    mask: Age at Z
-    unit: Gyr
-  age_today:
-    mask: Age Today
-    unit: Gyr
+result_dict:  
+  comoving_distance:
+    mask: Comoving Distance
+    unit: Mpc
   angular_diameter_distance:
     mask: Angular Diameter Distance
     unit: Mpc
-  comoving_distance:
-    mask: Comoving Distance
+  luminosity_distance:
+    mask: Luminosity Distance
     unit: Mpc
   comoving_volume:
     mask: Comoving Volume
@@ -130,10 +127,13 @@ result_dict:
     unit: Mpc³
   distance_modulus:
     mask: Distance Modulus
-    unit: mag
-  light_travel_time:
-    mask: Light Travel Time
+    unit: mag  
+  age_at_z:
+    mask: Age at Z
     unit: Gyr
-  luminosity_distance:
-    mask: Luminosity Distance
-    unit: Mpc
+  light_travel_time:
+    mask: Lookback Time
+    unit: Gyr
+  age_today:
+    mask: Age Today(z=0)
+    unit: Gyr
