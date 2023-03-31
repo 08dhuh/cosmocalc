@@ -360,10 +360,11 @@ def display_cosmo_plots():
     Display cosmology plots for various attributes.
     """
     c1,c2 = st.columns([1,2])
-    with c2:
-        z_range = st.slider('range of redshift', 0, st.session_state['max_z'], (0, 5), )
     with c1:        
         st.number_input('Adjust the maximum range of z (min=5)', value=100, min_value=5, key='max_z')
+    with c2:
+        z_range = st.slider('range of redshift', 0, st.session_state['max_z'], (0, 5), )
+    
     zs = get_zs(z_range)
     col1, _, col2 = st.columns([2, 0.2, 2])
     for i, att in enumerate(result_dict):
