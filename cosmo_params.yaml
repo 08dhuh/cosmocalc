@@ -8,7 +8,7 @@ input_param_dict:
     description:
       "This is the expansion term. In standard cosmologies, it is equal\
       \ to \u03A9=\u03A9\u2080=-1"
-    mask: Expansion w\u2080
+    mask: "w\u2080"
     min: -2.0
     max: 0.0
   wa:
