@@ -1,31 +1,14 @@
 input_param_dict:
   H0:
     description: Hubble constant in km/s/Mpc
-    mask: "H\u2080"
+    mask: "Hubble constant H\u2080"
     min: 0.0
     max: 1000.0
-  omega_Lambda:
-    description: This is the dark energy density term.
-    mask: "\u03A9\u209B"
-    min: 0.0
-    max: 2.0
-  omega_M:
-    description: This is the matter density term.
-    mask: "\u03A9\u2098"
-    min: 0.0
-    max: 1.0
-  omega_rad:
-    description:
-      This is the radiation density term. In standard cosmologies, radiation
-      is only dominant at very high redshifts.
-    mask: "\u03A9\u209A"
-    min: 0.0
-    max: 1.0
   w:
     description:
-      "This is the expansion term. In standard cosmologies it is equal\
+      "This is the expansion term. In standard cosmologies, it is equal\
       \ to \u03A9=\u03A9\u2080=-1"
-    mask: w
+    mask: Expansion w\u2080
     min: -2.0
     max: 0.0
   wa:
@@ -36,6 +19,22 @@ input_param_dict:
     mask: "w\u2090"
     min: -2.0
     max: 2.0
+  omega_Lambda:
+    description: This is the dark energy density term.
+    mask: "Dark Energy Density \u03A9\u2097"
+    min: 0.0
+    max: 2.0
+  omega_M:
+    description: This is the matter density term.
+    mask: "Matter Density \u03A9\u2098"
+    min: 0.0
+    max: 1.0
+  omega_rad:
+    description:
+      This is the radiation density term.
+    mask: "Radiation Density \u03A9\u209A"
+    min: 0.0
+    max: 1.0
   omega_k:
     description: "This is the curvature density term.\
       It describes the spatial curvature of the universe, which can be open, flat, or closed."

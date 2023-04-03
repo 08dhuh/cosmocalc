@@ -187,9 +187,10 @@ def calculate_cosmo_attributes_z(z, df=None):
 
 
 @st.cache_data(experimental_allow_widgets=True, max_entries=1000)
-def get_zs(z_range,num_points: int = 100):
+def get_zs(z_range,num_points: int = 100, diverging_value=5, offset=1e-1):
     """
     Returns an array of redshift values between the given range.
+    If the redshift range is greater than 5, np.logspace is used instead of np.linspace
 
     Args:
         z_range(tuple): The redshift range.
@@ -198,13 +199,22 @@ def get_zs(z_range,num_points: int = 100):
     Returns:
         np.ndarray: An array of redshift values between the given range.
     """    
-    if z_range[0] == z_range[1]:
-        st.error('min and max values must be different')
-        return None
-    zs = np.linspace(z_range[0], z_range[1], num_points)
-    if zs[0] == 0:  # redshift should be greater than zero
-        zs = np.append(zs[1:], zs[-1]+np.diff(zs)[0])
-    return zs
+    try:
+        z_min, z_max = z_range
+        if abs(z_max-z_min) <= diverging_value:
+            zs = np.linspace(z_min, z_max, num_points)
+            if zs[0] == 0:  # redshift should be greater than zero
+                zs = np.append(zs[1:], zs[-1]+np.diff(zs)[0])            
+        else:            
+            if z_min <=0:
+                z_min += offset    
+            zs = np.geomspace(z_min, z_max, num_points)       
+        return zs
+    except TypeError as e:
+        if z_range[0] == z_range[1]:
+            st.error('min and max values must be different')
+        st.error(e)    
+
 
 # @st.cache_data
 
@@ -227,11 +237,22 @@ def plot_cosmo_attribute(funcname: str, z: np.ndarray, result_dict: dict = resul
     fig = px.line(df,
                   x='redshift',
                   y=funcname,
-                  title=f'{result_dict[funcname]["mask"]}',
+                  title=f'{result_dict[funcname]["mask"]} ({result_dict[funcname]["unit"]})',
                   labels={
-                      funcname: f'{result_dict[funcname]["mask"]} ({result_dict[funcname]["unit"]})'},
+                      funcname: f'{result_dict[funcname]["mask"]} ({result_dict[funcname]["unit"]})',
+                      'redshift': 'redshift z'},
                   log_x=True
                   )
+    # layout = dict(
+    #     xaxis=dict(
+    #       tickformat='.2e'
+    #       zeroline = True,  
+    #     ),
+    #     yaxis=dict(
+            
+    #     )
+    # )
+    #fig.update_xaxes(layout)
     return fig
 # ---------------------flow---------------------
 # ---------------- initialisation--------------------------------
