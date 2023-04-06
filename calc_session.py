@@ -241,18 +241,11 @@ def plot_cosmo_attribute(funcname: str, z: np.ndarray, result_dict: dict = resul
                   labels={
                       funcname: f'{result_dict[funcname]["mask"]} ({result_dict[funcname]["unit"]})',
                       'redshift': 'redshift z'},
-                  log_x=True
+                  log_x=True,
+                  template='plotly_white',
                   )
-    # layout = dict(
-    #     xaxis=dict(
-    #       tickformat='.2e'
-    #       zeroline = True,  
-    #     ),
-    #     yaxis=dict(
-            
-    #     )
-    # )
-    #fig.update_xaxes(layout)
+    fig.update_xaxes(exponentformat='power')
+    fig.update_yaxes(exponentformat='power')
     return fig
 # ---------------------flow---------------------
 # ---------------- initialisation--------------------------------
