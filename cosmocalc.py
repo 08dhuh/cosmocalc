@@ -1,19 +1,15 @@
-import numpy as np
 import math
-import streamlit as st
+import numpy as np
 from scipy.integrate import quad
 from astropy import constants as const
 
 # -------------------------------constants
 c = const.c.to('km/s').value
 mpc = 3.08567758147e+19
-# const.kpc.value
 seconds_in_a_year = 31557600  # julian
-# c = 2.99792458e5   # in units of km
-# Mpc2km = 3.08567758147e+19     # converts Mpc to km
+
 
 cosmo_input_params = ['H0', 'w', 'wa', 'omega_rad', 'omega_M', 'omega_Lambda']
-
 
 
 class Cosmocalc:
