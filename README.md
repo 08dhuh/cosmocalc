@@ -10,17 +10,17 @@
 </ul>
 
 <p>To install these packages, run the following command on the directory containing requirements.txt</p>:
+
 ```
-{
 pip install -r requirements.txt
-}
 ```
 
 <p>To run the app, naviate to the directory containing calc_session.py and run the following command</p>
-```{
-streamlit run app.py
-}
+
 ```
+streamlit run app.py
+```
+
 <p>Once the app is running, follow the on-screen instructions to input the necessary parameters and calculate the desired cosmological parameters.</p>
 
 <h2>Usage</h2>
