@@ -1,12 +1,13 @@
-Requirements
-This app requires the following Python packages:
-
-streamlit
-numpy
-pandas
-yaml
-plotly.express
-cosmocalc
+<h1>Requirements</h1>
+<p>This app requires the following Python packages:</p>
+<ul>
+<li>streamlit</li>
+<li>numpy</li>
+<li>pandas</li>
+<li>yaml</li>
+<li>plotly.express</li>
+<li>cosmocalc</li>
+</ul>
 To install these packages, please run the following command:
 
 sh
